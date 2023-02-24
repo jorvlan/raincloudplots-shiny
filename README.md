@@ -4,11 +4,11 @@
 raincloudplots: The ShinyApp
 <br>
 <br>
-developing the official 'raincloudplots' ShinyApp, work in progress (29-apr-22)
+developing the official 'raincloudplots' ShinyApp, work in progress (24-feb-23)
 <br>
 <br>
-Please check again in a couple of weeks/months
+Please check again in a couple of weeks!!
 <br>
 <br>
-Best, Jordy
+Best, Jordy & Nick
 
