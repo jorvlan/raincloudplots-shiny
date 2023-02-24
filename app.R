@@ -67,7 +67,7 @@ df_example_tidy_2x2 <- data_2x2(array_1 = iris$Sepal.Length[1:50],
                                 spread_x_ticks = FALSE)
 
 # Define UI functions ----
-ui <- dashboardPage(skin = 'green',
+ui <- dashboardPage(skin = 'blue',
   
   # |- App title ----                                
   dashboardHeader(title = 'raincloudplots'),
@@ -339,15 +339,17 @@ userdata <- reactive({
       if(is.null(userdata())) return(NULL)
       req(userdata())
       box(
-        title = "User Data", width = NULL, status = "primary",
-        collapsible = TRUE, collapsed = TRUE,
+        title = "Uploaded data", width = NULL, status = "primary",
+        collapsible = TRUE, collapsed = FALSE,
         div(style = "overflow-x: scroll", tableOutput("dataTable"))
       )
     })
-    output$dataTable <- renderTable({
-      head(userdata(), row = 100)
-    })
- 
+    output$dataTable <- renderTable(userdata()) #head(userdata(), row = 1000))
+
+
 }
+
+
+
 # Run the shiny application ----
 shinyApp(ui = ui, server = server)
