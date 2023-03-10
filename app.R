@@ -35,7 +35,7 @@ library(shinydashboard)
 library(datasets)
 library(DT)
 
-setwd("/Users/jordyvanlangen/Desktop/raincloudplots_shiny/raincloudplots")
+#setwd("/Users/jordyvanlangen/Desktop/raincloudplots_shiny/raincloudplots")
 #setwd("/Users/jordyvanlangen/Desktop/raincloudplots_shiny/raincloudplots/www")
 
 ## functions
@@ -176,6 +176,8 @@ ui <- dashboardPage(skin = 'blue',
                                            label = "Select Data Source",
                                            choices = c("User Data", "Example Data"),
                                            selected = "User Data")),
+                shiny::column(width = 3,
+                              checkboxInput(inputId = "toggle_tidy", label = "Convert to tidy", value = FALSE)),
                 shiny::column(width = 6,
                               uiOutput("DataSource")
                 )),
@@ -333,6 +335,12 @@ userdata <- reactive({
   }
 })
 
+# for toggle_tidy
+mod_userdata <- reactive({
+  if(input$toggle_tidy == TRUE){
+    gather(userdata())
+  } else userdata()})
+
 
 ## Display User Data in Table
     output$UserData <- renderUI({
@@ -353,3 +361,8 @@ userdata <- reactive({
 
 # Run the shiny application ----
 shinyApp(ui = ui, server = server)
+
+
+
+
+
