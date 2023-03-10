@@ -39,8 +39,6 @@ library(DT)
 #setwd("/Users/jordyvanlangen/Desktop/raincloudplots_shiny/raincloudplots/www")
 
 ## functions
-source("data_1x1.R")
-source("data_2x2.R")
 source("raincloud_1x1.R")
 source("raincloud_1x1_repmes.R")
 source("raincloud_2x2_repmes.R")
@@ -176,11 +174,11 @@ ui <- dashboardPage(skin = 'blue',
                                            label = "Select Data Source",
                                            choices = c("User Data", "Example Data"),
                                            selected = "User Data")),
+                shiny::column(width = 6,
+                              uiOutput("DataSource")),
                 shiny::column(width = 3,
                               checkboxInput(inputId = "toggle_tidy", label = "Convert to tidy", value = FALSE)),
-                shiny::column(width = 6,
-                              uiOutput("DataSource")
-                )),
+                ),
                 
                 # View User Data Table
                 fluidRow(
@@ -323,14 +321,8 @@ userdata <- reactive({
     }
   } else if (input$inputType == "Example Data"){
     if (is.null(input$selectexample)) return(NULL)
-    if (input$selectexample == ""){
-      return(NULL)
-    } else if (input$selectexample == "gmvolume"){
-      df <- read.csv("./data/example01-2items.csv")
-    } else if (input$selectexample == "scale10"){
-      df <- read.csv("./data/example02-10items.csv")
-    } else if (input$selectexample == "propSum"){
-      df <- read.csv("./data/example03-4items.csv")
+    if (input$selectexample == T){
+      df <- read.csv("./data/iris_ct.csv")
     }}
   if(input$toggle_tidy == TRUE){
     gather(df)} else{df}
@@ -363,8 +355,7 @@ userdata <- reactive({
 
 
 # Run the shiny application ----
-shinyApp(ui = ui, server = server)
-
+shinyApp(ui = ui, server = server, options = list(launch.browser = T))
 
 
 
