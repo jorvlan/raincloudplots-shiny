@@ -48,22 +48,6 @@ source("geom_flat_violin.R")
 ## Read in the example dataset 'iris' {datasets}
 df_example <- datasets::iris
 
-## Tidy the df_example for a 1 by 1 raincloudplot
-df_example_tidy_1x1 <- data_1x1(array_1 = iris$Sepal.Length[1:50],
-                                array_2 = iris$Sepal.Length[51:100],
-                                jit_distance = .09,
-                                jit_seed = 321)
-
-## Tidy the df_example for a 2 by 2 raincloudplot
-df_example_tidy_2x2 <- data_2x2(array_1 = iris$Sepal.Length[1:50],
-                                array_2 = iris$Sepal.Length[51:100],
-                                array_3 = iris$Sepal.Length[101:150],
-                                array_4 = iris$Sepal.Length[81:130],
-                                labels = (c('congruent','incongruent')),
-                                jit_distance = .09,
-                                jit_seed = 321,
-                                spread_x_ticks = FALSE)
-
 # Define UI functions ----
 ui <- dashboardPage(skin = 'blue',
   
@@ -320,10 +304,8 @@ userdata <- reactive({
       df <- read.csv(input$userfile$datapath, header = TRUE)
     }
   } else if (input$inputType == "Example Data"){
-    if (is.null(input$selectexample)) return(NULL)
-    if (input$selectexample == T){
       df <- read.csv("./data/iris_ct.csv")
-    }}
+    }
   if(input$toggle_tidy == TRUE){
     gather(df)} else{df}
   })
@@ -348,10 +330,7 @@ userdata <- reactive({
       )
     })
     output$dataTable <- renderTable(userdata()) #head(userdata(), row = 1000))
-
-
 }
-
 
 
 # Run the shiny application ----
