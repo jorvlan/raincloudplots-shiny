@@ -164,12 +164,12 @@ ui <- dashboardPage(skin = 'blue',
       # -| 8th tab content ----
       tabItem(tabName = "uploaddata",
               h2("Upload your data"),
-              fileInput("upload", NULL, multiple = FALSE, accept = c(".xlsx", ".xls", ".txt", ".csv")),
+              # fileInput("upload", NULL, multiple = FALSE, accept = c(".xlsx", ".xls", ".txt", ".csv")),
               
-              selectInput("upload_delim", label = "Select Delimiter (for text file):", choices =list("Comma" = ",",
-                                                                                                     "Tab" = "\t",
-                                                                                                     "Semicolon" = ";",
-                                                                                                     "Space" = " ")),
+              # selectInput("upload_delim", label = "Select Delimiter (for text file):", choices =list("Comma" = ",",
+              #                                                                                        "Tab" = "\t",
+              #                                                                                        "Semicolon" = ";",
+              #                                                                                        "Space" = " ")),
               fluidRow(
                 shiny::column(width = 3,
                               radioButtons(inputId = "inputType",
@@ -315,31 +315,34 @@ userdata <- reactive({
   if(input$inputType == "User Data"){
     if (is.null(input$userfile$datapath)) return(NULL)
     if (grepl(".sav", input$userfile$datapath)){
-      foreign::read.spss(input$userfile$datapath, to.data.frame = TRUE)
+      df <- foreign::read.spss(input$userfile$datapath, to.data.frame = TRUE)
     } else if (grepl(".xls", input$userfile$datapath)){
-      read.table(input$userfile$datapath, sep="\t", header = TRUE)
+      df <- read.table(input$userfile$datapath, sep="\t", header = TRUE)
     } else {
-      read.csv(input$userfile$datapath, header = TRUE)
+      df <- read.csv(input$userfile$datapath, header = TRUE)
     }
   } else if (input$inputType == "Example Data"){
     if (is.null(input$selectexample)) return(NULL)
     if (input$selectexample == ""){
       return(NULL)
     } else if (input$selectexample == "gmvolume"){
-      read.csv("./data/example01-2items.csv")
+      df <- read.csv("./data/example01-2items.csv")
     } else if (input$selectexample == "scale10"){
-      read.csv("./data/example02-10items.csv")
+      df <- read.csv("./data/example02-10items.csv")
     } else if (input$selectexample == "propSum"){
-      read.csv("./data/example03-4items.csv")
-    }
-  }
-})
-
-# for toggle_tidy
-mod_userdata <- reactive({
+      df <- read.csv("./data/example03-4items.csv")
+    }}
   if(input$toggle_tidy == TRUE){
-    gather(userdata())
-  } else userdata()})
+    gather(df)} else{df}
+  })
+
+# you can nest reactives or just assign
+
+# # for toggle_tidy
+# mod_userdata <- reactive({
+#   if(input$toggle_tidy == TRUE){
+#     gather(userdata())
+#   } else userdata()})
 
 
 ## Display User Data in Table
