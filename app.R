@@ -259,9 +259,9 @@ ui <- dashboardPage(skin = 'blue',
 # Define server functions ----
 server <- function(input, output) { 
   # The currently selected tab from the first box
-  output$tabset1Selected <- renderText({
-    input$tabset1
-  })
+  # output$tabset1Selected <- renderText({
+  #   input$tabset1
+  # })
   
 #### DISPLAY example data ##################
   
