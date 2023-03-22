@@ -31,20 +31,17 @@
 
 ## If you haven't installed these packages, please start do so with `install.packages()`
 library(shiny)
+library(shinyWidgets)
 library(shinydashboard)
 library(datasets)
 library(DT)
+library(ggrain)
 
 
 #setwd("/Users/jordyvanlangen/Desktop/raincloudplots_shiny/raincloudplots")
 #setwd("/Users/jordyvanlangen/Desktop/raincloudplots_shiny/raincloudplots/www")
 
 ## functions
-source("raincloud_1x1.R")
-source("raincloud_1x1_repmes.R")
-source("raincloud_2x2_repmes.R")
-source("raincloud_2x3_repmes.R")
-source("geom_flat_violin.R")
 
 ## Read in the example dataset 'iris' {datasets}
 df_example <- datasets::iris
@@ -61,7 +58,7 @@ ui <- dashboardPage(skin = 'blue',
                         
                         menuItem("About", tabName = "aboutraincloudplots"),
                         
-                        menuItem("Upload data", tabName = "uploaddata", icon = icon("upload", lib = "glyphicon"))
+                        menuItem("Make Rainclouds", tabName = "uploaddata", icon = icon("upload", lib = "glyphicon"))
                         
                       )
                     ),
@@ -103,8 +100,8 @@ ui <- dashboardPage(skin = 'blue',
                                   shiny::column(width = 3,
                                                 radioButtons(inputId = "inputType",
                                                              label = "",
-                                                             choices = c("User Data"), # "Example Data"),
-                                                             selected = "User Data")),
+                                                             choices = c("User Data", "Iris Data"), # "Example Data"),
+                                                             selected = "Iris Data")),
                                   shiny::column(width = 6,
                                                 uiOutput("DataSource")),
                                   shiny::column(width = 3,
@@ -140,6 +137,14 @@ ui <- dashboardPage(skin = 'blue',
                                   uiOutput("FinalData")
                                 ),
                                 shiny::br(),
+                                sidebarPanel(
+                                  uiOutput("picker_variable")#,
+                                  #actionButton("variable", "Variable"),
+                                ),
+                                sidebarPanel(
+                                  uiOutput("picker_group")#,
+                                  #actionButton("group", "Group")
+                                ),
                             
                                 
                                 tabBox(
@@ -147,6 +152,7 @@ ui <- dashboardPage(skin = 'blue',
                                   # The id lets us use input$tabset1 on the server to find the current tab
                                   id = "tabset1", height = "400px", width = "12",
                                   tabPanel(title = "Plot", value =  "", 
+                                           plotOutput("rain"),
                                            downloadButton("downloadPlotPDF", "Download pdf-file", style = "padding: 5px 5px 5px 5px; margin: 300px 5px 5px 5px; "),
                                            downloadButton("downloadPlotSVG", "Download svg-file", style = "padding: 5px 5px 5px 5px; margin: 300px 5px 5px 5px; "),
                                            downloadButton("downloadPlotPNG", "Download png-file", style = "padding: 5px 5px 5px 5px; margin: 300px 5px 5px 5px; "))
@@ -199,7 +205,7 @@ server <- function(input, output) {
       } else {
         df <- read.csv(input$userfile$datapath, header = TRUE)
       }
-    } else if (input$inputType == "Example Data"){
+    } else if (input$inputType == "Iris Data"){
       df <- read.csv("./data/iris_ct.csv")
     }
     if(input$toggle_tidy == TRUE){
@@ -221,16 +227,47 @@ server <- function(input, output) {
     req(userdata())
     box(
       title = "Uploaded data", width = NULL, status = "primary",
-      collapsible = TRUE, collapsed = FALSE,
+      collapsible = TRUE, collapsed = TRUE,
       div(style = "overflow-x: scroll", tableOutput("dataTable"))
     )
   })
   output$dataTable <- renderTable(userdata()) #head(userdata(), row = 1000))
+  
+  
+  
+  output$picker_variable <- renderUI({
+    pickerInput(inputId = 'pick_var', 
+                label = 'Choose Variable', 
+                choices = colnames(userdata()),
+                options = list(`actions-box` = TRUE),multiple = F)
+  })
+  
+  output$picker_group <- renderUI({
+    pickerInput(inputId = 'pick_grp', 
+                label = 'Choose Group',
+                choices = colnames(userdata()),
+                options = list(`actions-box` = TRUE),multiple = F)
+  })
+  
+  ct <- reactive({input$pick_var})
+  
+  output$rain <- renderPlot(
+    # boxplot(iris$Sepal.Length)  # userdata()$pick_var
+    boxplot(userdata()$ct)  # userdata()$pick_var
+    
+    # boxplot(userdata()$input$pick_var)  # userdata()$pick_var
+  )
 }
 
 
 # Run the shiny application ----
 shinyApp(ui = ui, server = server, options = list(launch.browser = T))
+
+
+
+
+# when the user uploads data, it should switch to user data?
+
 
 
 
