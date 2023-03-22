@@ -109,9 +109,9 @@ ui <- dashboardPage(skin = 'blue',
                                 ),
                                 
                                 # View User Data Table
-                                fluidRow(
-                                  uiOutput("UserData")
-                                ),
+                                # fluidRow(
+                                #   uiOutput("UserData")
+                                # ),
                                 
                                 # Warnings for Improper Input
                                 fluidRow(
@@ -132,27 +132,32 @@ ui <- dashboardPage(skin = 'blue',
                                 ),
                                 shiny::br(),
                                 
-                                # View Final Data Frame
-                                fluidRow(
-                                  uiOutput("FinalData")
-                                ),
+                                # # View Final Data Frame
+                                # fluidRow(
+                                #   uiOutput("FinalData")
+                                # ),
                                 shiny::br(),
                                 sidebarPanel(
-                                  uiOutput("picker_variable")#,
+                                  uiOutput("picker_variable"),
+                                  uiOutput("picker_group")
                                   #actionButton("variable", "Variable"),
                                 ),
+                                # sidebarPanel(
+                                #   uiOutput("picker_group")#,
+                                # ),
                                 sidebarPanel(
-                                  uiOutput("picker_group")#,
-                                  #actionButton("group", "Group")
-                                ),
-                            
-                                
+                                sliderInput("height", "height", min = 100, max = 1000, value = 300, step = 100),
+                                sliderInput("width", "width", min = 100, max = 1000, value = 500, step = 100)),
                                 tabBox(
                                   title = "",
                                   # The id lets us use input$tabset1 on the server to find the current tab
-                                  id = "tabset1", height = "400px", width = "12",
+                                  id = "tabset1", height = "300px", width = "500px",
+                                  tabPanel(title = "Data", value =  "",
+                                           fluidRow(
+                                             uiOutput("UserData")
+                                           )),
                                   tabPanel(title = "Plot", value =  "", 
-                                           plotOutput("rain"),
+                                           plotOutput("rain", width = 5000, height = 300),
                                            downloadButton("downloadPlotPDF", "Download pdf-file", style = "padding: 5px 5px 5px 5px; margin: 300px 5px 5px 5px; "),
                                            downloadButton("downloadPlotSVG", "Download svg-file", style = "padding: 5px 5px 5px 5px; margin: 300px 5px 5px 5px; "),
                                            downloadButton("downloadPlotPNG", "Download png-file", style = "padding: 5px 5px 5px 5px; margin: 300px 5px 5px 5px; "))
@@ -227,7 +232,7 @@ server <- function(input, output) {
     req(userdata())
     box(
       title = "Uploaded data", width = NULL, status = "primary",
-      collapsible = TRUE, collapsed = TRUE,
+      collapsible = TRUE, collapsed = FALSE,
       div(style = "overflow-x: scroll", tableOutput("dataTable"))
     )
   })
@@ -245,27 +250,25 @@ server <- function(input, output) {
   output$picker_group <- renderUI({
     pickerInput(inputId = 'pick_grp', 
                 label = 'Choose Group',
-                choices = colnames(userdata()),
+                choices = colnames(userdata())[as.logical(sapply(userdata(), is.character) + sapply(userdata(), is.factor) == 1)],
                 options = list(`actions-box` = TRUE),multiple = F)
   })
   
-  ct <- reactive({input$pick_var})
+  # ct <- reactive({input$pick_var})
   
-  output$rain <- renderPlot({
-    # boxplot(iris$Sepal.Length)  # userdata()$pick_var
-    
-    # this WORKS!!!
-    # x <- userdata()[, c(input$pick_var)]
-    # boxplot(x)  # userdata()$pick_var
-    
-  
-    ggplot(userdata()) +
-      geom_rain(aes(1, .data[[ct]]))
-    
-    
-    # boxplot(userdata()$input$pick_var)  # userdata()$pick_var
-  })
+  output$rain <- renderPlot(
+    width = function() input$width,
+    height = function() input$height,
+    res = 96,
+    {
+      ggplot(userdata(), aes(x = .data[[input$pick_var]], 
+                             y = .data[[input$pick_grp]],
+                             fill = .data[[input$pick_grp]])) + 
+        geom_boxplot()
+    })
 }
+
+# https://stackoverflow.com/questions/65564029/r-shiny-reactive-x-axis-ggplot
 
 
 # Run the shiny application ----
