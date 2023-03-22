@@ -251,12 +251,20 @@ server <- function(input, output) {
   
   ct <- reactive({input$pick_var})
   
-  output$rain <- renderPlot(
+  output$rain <- renderPlot({
     # boxplot(iris$Sepal.Length)  # userdata()$pick_var
-    boxplot(userdata()$ct)  # userdata()$pick_var
+    
+    # this WORKS!!!
+    # x <- userdata()[, c(input$pick_var)]
+    # boxplot(x)  # userdata()$pick_var
+    
+  
+    ggplot(userdata()) +
+      geom_rain(aes(1, .data[[ct]]))
+    
     
     # boxplot(userdata()$input$pick_var)  # userdata()$pick_var
-  )
+  })
 }
 
 
