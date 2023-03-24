@@ -261,10 +261,10 @@ server <- function(input, output) {
     height = function() input$height,
     res = 96,
     {
-      ggplot(userdata(), aes(x = .data[[input$pick_var]], 
-                             y = .data[[input$pick_grp]],
+      ggplot(userdata(), aes(y = .data[[input$pick_var]], 
+                             x = .data[[input$pick_grp]],
                              fill = .data[[input$pick_grp]])) + 
-        geom_boxplot()
+        geom_rain()
     })
 }
 
