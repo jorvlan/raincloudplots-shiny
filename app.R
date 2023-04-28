@@ -313,30 +313,6 @@ server <- function(input, output) {
     }
   )
   
-  
-  
-  # output$rain <- renderPlot(
-  #   width = function() input$width,
-  #   height = function() input$height,
-  #   res = 96,
-  #   {
-  #     ggplot(userdata(), aes(y = .data[[input$pick_var]], 
-  #                            x = .data[[input$pick_grp]],
-  #                            fill = .data[[input$pick_grp]])) + 
-  #       geom_rain() +
-  #       theme_minimal(base_size = 15)
-  #   })
-  
-  # output$downloadPlotPDF <- downloadHandler(
-  #   filename = function() { paste('rain', '.pdf', sep='') }, #input$file1
-  #   content = function(file) {
-  #     pdf(file)
-  #     print(rain())
-  #     dev.off()
-  #   })
-  
-  
-  
 }
 
 
