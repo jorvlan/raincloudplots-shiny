@@ -22,8 +22,8 @@
 #
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # |- Credits ----
-# written by: Jordy van Langen (Personal GitHub: https://github.com/jorvlan)
-# date: 13-05-2022
+# written by: Nicholas Judd, Rogier Kievit & Jordy van Langen
+# date: 28-05-2023
 # contact:jordyvanlangen@gmail.com or DM on Twitter: https://twitter.com/jordyvanlangen
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -161,7 +161,7 @@ ui <- dashboardPage(skin = 'black',
                                              uiOutput("UserData")
                                            # DT::dataTableOutput("UserData")
                                            ),
-                                  tabPanel(title = "Plot", value =  "", 
+                                  tabPanel(title = "Raincloud Plot", value =  "", 
                                            plotOutput("rain", width = 500, height = 300),
                                            downloadButton("downloadPlotPDF", "Download pdf-file", style = "padding: 5px 5px 5px 5px; margin: 300px 5px 5px 5px; "),
                                            downloadButton("downloadPlotSVG", "Download svg-file", style = "padding: 5px 5px 5px 5px; margin: 300px 5px 5px 5px; "),
@@ -259,7 +259,7 @@ server <- function(input, output) {
                 label = 'Choose Group',
                 selected = NULL,
                 multiple = TRUE,
-                options = list(`actions-box` = TRUE, pickerOptions(maxOptions = 1)),
+                options = list(pickerOptions(maxOptions = 1)),
                 choices = colnames(userdata())[as.logical(sapply(userdata(), is.character) + sapply(userdata(), is.factor) == 1)],
                 #options = list(`actions-box` = TRUE)
                 )
