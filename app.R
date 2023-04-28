@@ -269,11 +269,24 @@ server <- function(input, output) {
   
   
   rain_plot <- reactive({
-    ggplot(userdata(), aes(y = .data[[input$pick_var]], 
-                           x = .data[[input$pick_grp]],
-                           fill = .data[[input$pick_grp]])) + 
-      geom_rain() +
-      theme_minimal(base_size = 15)
+    if(is.null(input$pick_grp)){
+      ggplot(userdata(), 
+             aes(y = .data[[input$pick_var]], 
+                 x = 1)) + 
+        geom_rain(
+          boxplot.args = list(fill = "blue", outlier.shape = NA),
+          violin.args = list(fill = "blue")) +
+        theme_minimal(base_size = 15) +
+        theme(axis.title.x=element_blank(),
+              axis.text.x=element_blank(),
+              axis.ticks.x=element_blank())
+    } else {
+      ggplot(userdata(), aes(y = .data[[input$pick_var]], 
+                             x = .data[[input$pick_grp]],
+                             fill = .data[[input$pick_grp]])) + 
+        geom_rain() +
+        theme_minimal(base_size = 15)
+    }
   })
   
   ## Display the rain plot
@@ -298,7 +311,7 @@ server <- function(input, output) {
   )
   output$downloadPlotSVG <- downloadHandler(
     filename = function(file) {
-      "rain_plot.pdf"
+      "rain_plot.svg"
     },
     content = function(file) {
       ggsave(file, plot = rain_plot(), units = "mm", device = "svg")
@@ -306,13 +319,12 @@ server <- function(input, output) {
   )
   output$downloadPlotPNG <- downloadHandler(
     filename = function(file) {
-      "rain_plot.pdf"
+      "rain_plot.png"
     },
     content = function(file) {
-      ggsave(file, plot = rain_plot(), units = "mm", device = "png")
+      ggsave(file, plot = rain_plot(), units = "mm", device = "png", bg = "white")
     }
   )
-  
 }
 
 
