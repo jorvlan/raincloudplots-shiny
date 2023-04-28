@@ -47,7 +47,7 @@ library(ggrain)
 df_example <- datasets::iris
 
 # Define UI functions ----
-ui <- dashboardPage(skin = 'blue',
+ui <- dashboardPage(skin = 'black',
                     
                     # |- App title ----                                
                     dashboardHeader(title = 'raincloudplots'),
@@ -57,8 +57,9 @@ ui <- dashboardPage(skin = 'blue',
                       sidebarMenu(
                         
                         menuItem("About", tabName = "aboutraincloudplots"),
-                        
-                        menuItem("Make Rainclouds", tabName = "uploaddata", icon = icon("upload", lib = "glyphicon"))
+                        menuItem("Make Rainclouds", tabName = "uploaddata", 
+                                 selected = TRUE,
+                                 icon = icon("upload", lib = "glyphicon"))
                         
                       )
                     ),
@@ -138,24 +139,27 @@ ui <- dashboardPage(skin = 'blue',
                                 #   uiOutput("FinalData")
                                 # ),
                                 shiny::br(),
-                                sidebarPanel(
+                                fluidRow(
+                                  sidebarPanel(
                                   uiOutput("picker_variable"),
                                   uiOutput("picker_group")
                                   #actionButton("variable", "Variable"),
                                 ),
                                 # sidebarPanel(
+                                # sliderInput("height", "height", min = 100, max = 1000, value = 500, step = 100),
+                                # sliderInput("width", "width", min = 100, max = 1000, value = 700, step = 100)),
+                                ),
+                                # sidebarPanel(
                                 #   uiOutput("picker_group")#,
                                 # ),
-                                sidebarPanel(
-                                sliderInput("height", "height", min = 100, max = 1000, value = 300, step = 100),
-                                sliderInput("width", "width", min = 100, max = 1000, value = 500, step = 100)),
                                 shiny::br(), shiny::br(),
                                 tabBox(
                                   title = "",
                                   # The id lets us use input$tabset1 on the server to find the current tab
-                                  id = "tabset1", height = "300px", width = "500px",
+                                  id = "tabset1", height = "700px", width = "500px",
                                   tabPanel(title = "Data", value =  "",
                                              uiOutput("UserData")
+                                           # DT::dataTableOutput("UserData")
                                            ),
                                   tabPanel(title = "Plot", value =  "", 
                                            plotOutput("rain", width = 500, height = 300),
@@ -228,20 +232,21 @@ server <- function(input, output) {
   #   } else userdata()})
   
   
+  
+  
   ## Display User Data in Table
   output$UserData <- renderUI({
     if(is.null(userdata())) return(NULL)
+
     req(userdata())
     box(
       title = "Uploaded data", width = NULL, status = "primary",
       collapsible = TRUE, collapsed = FALSE,
-      div(style = "overflow-x: scroll", tableOutput("dataTable")) # style = "overflow-x: scroll", 
+      DT::renderDataTable(userdata())
+      # div(style = "overflow-x: scroll", tableOutput("dataTable")) # style = "overflow-x: scroll",
     )
   })
-  output$dataTable <- renderTable(userdata()) #head(userdata(), row = 1000))
-  
-  
-  
+
   output$picker_variable <- renderUI({
     pickerInput(inputId = 'pick_var', 
                 label = 'Choose Variable', 
@@ -252,23 +257,90 @@ server <- function(input, output) {
   output$picker_group <- renderUI({
     pickerInput(inputId = 'pick_grp', 
                 label = 'Choose Group',
+                selected = NULL,
+                multiple = TRUE,
+                options = list(`actions-box` = TRUE, pickerOptions(maxOptions = 1)),
                 choices = colnames(userdata())[as.logical(sapply(userdata(), is.character) + sapply(userdata(), is.factor) == 1)],
-                options = list(`actions-box` = TRUE),multiple = F)
+                #options = list(`actions-box` = TRUE)
+                )
   })
   
   # ct <- reactive({input$pick_var})
   
+  
+  rain_plot <- reactive({
+    ggplot(userdata(), aes(y = .data[[input$pick_var]], 
+                           x = .data[[input$pick_grp]],
+                           fill = .data[[input$pick_grp]])) + 
+      geom_rain() +
+      theme_minimal(base_size = 15)
+  })
+  
+  ## Display the rain plot
   output$rain <- renderPlot(
-    width = function() input$width,
-    height = function() input$height,
+    width = 800,
+    height = 550,
+    # width = function() input$width,
+    # height = function() input$height,
     res = 96,
     {
-      ggplot(userdata(), aes(y = .data[[input$pick_var]], 
-                             x = .data[[input$pick_grp]],
-                             fill = .data[[input$pick_grp]])) + 
-        geom_rain()
-    })
+    rain_plot()  
+  })
+  
+  output$downloadPlotPDF <- downloadHandler(
+    filename = function(file) {
+      "rain_plot.pdf"
+      #ifelse(is.null(input$DataFile), return(), str_c(input$Title, ".png"))
+    },
+    content = function(file) {
+      ggsave(file, plot = rain_plot(), units = "mm", device = "pdf") # width = 290, height = 265, 
+    }
+  )
+  output$downloadPlotSVG <- downloadHandler(
+    filename = function(file) {
+      "rain_plot.pdf"
+    },
+    content = function(file) {
+      ggsave(file, plot = rain_plot(), units = "mm", device = "svg")
+    }
+  )
+  output$downloadPlotPNG <- downloadHandler(
+    filename = function(file) {
+      "rain_plot.pdf"
+    },
+    content = function(file) {
+      ggsave(file, plot = rain_plot(), units = "mm", device = "png")
+    }
+  )
+  
+  
+  
+  # output$rain <- renderPlot(
+  #   width = function() input$width,
+  #   height = function() input$height,
+  #   res = 96,
+  #   {
+  #     ggplot(userdata(), aes(y = .data[[input$pick_var]], 
+  #                            x = .data[[input$pick_grp]],
+  #                            fill = .data[[input$pick_grp]])) + 
+  #       geom_rain() +
+  #       theme_minimal(base_size = 15)
+  #   })
+  
+  # output$downloadPlotPDF <- downloadHandler(
+  #   filename = function() { paste('rain', '.pdf', sep='') }, #input$file1
+  #   content = function(file) {
+  #     pdf(file)
+  #     print(rain())
+  #     dev.off()
+  #   })
+  
+  
+  
 }
+
+
+
 
 # https://stackoverflow.com/questions/65564029/r-shiny-reactive-x-axis-ggplot
 
