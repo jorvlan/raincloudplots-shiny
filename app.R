@@ -161,6 +161,29 @@ ui <- dashboardPage(skin = 'black',
                                              uiOutput("UserData")
                                            # DT::dataTableOutput("UserData")
                                            ),
+                                  tabPanel(title = "Plot Features", value = "",
+                                  #          # sidebarPanel(
+                                  #          # sliderInput("height", "height", min = 100, max = 1000, value = 500, step = 100),
+                                  #          # sliderInput("width", "width", min = 100, max = 1000, value = 700, step = 100)),
+                                  # )
+                                           ### Here you add (flipping, colors & color pallets)
+                                           ### size adjustments
+                                           ### alpha
+                                           ### overlapping option
+                                           ### change labs on axis
+                                           ### background themes (xkyd!)
+                                           ### base size of theme
+                                  fluidRow(
+                                                         checkboxInput(inputId = "flip", label = "Flip plot", value = FALSE),
+                                                         checkboxInput(inputId = "xaxis", label = "Remove x-axis", value = FALSE),
+                                                         checkboxInput(inputId = "yaxis", label = "Remove y-axis", value = FALSE)),
+                                  fluidRow(textInput("title", "Plot Title"),
+                                           textInput("xlab", "Label for x-axis"),
+                                           textInput("ylab", "Label for y-axis")),
+                                  sliderInput("height", "Height", min = 100, max = 1000, value = 500, step = 100),
+                                  sliderInput("width", "Width", min = 100, max = 1000, value = 700, step = 100)),
+                                           #),
+
                                   tabPanel(title = "Raincloud Plot", value =  "", 
                                            plotOutput("rain", width = 500, height = 300),
                                            downloadButton("downloadPlotPDF", "Download pdf-file", style = "padding: 5px 5px 5px 5px; margin: 300px 5px 5px 5px; "),
@@ -276,10 +299,7 @@ server <- function(input, output) {
         geom_rain(
           boxplot.args = list(fill = "blue", outlier.shape = NA),
           violin.args = list(fill = "blue")) +
-        theme_minimal(base_size = 15) +
-        theme(axis.title.x=element_blank(),
-              axis.text.x=element_blank(),
-              axis.ticks.x=element_blank())
+        theme_minimal(base_size = 15)
     } else {
       ggplot(userdata(), aes(y = .data[[input$pick_var]], 
                              x = .data[[input$pick_grp]],
@@ -289,16 +309,77 @@ server <- function(input, output) {
     }
   })
   
-  ## Display the rain plot
-  output$rain <- renderPlot(
-    width = 800,
-    height = 550,
-    # width = function() input$width,
-    # height = function() input$height,
-    res = 96,
-    {
-    rain_plot()  
+  ##### making nested options
+  # flipping
+  rain_plot_o1 <- reactive({
+    if(input$flip == TRUE){
+    rain_plot() + coord_flip()
+  } else
+    rain_plot()
   })
+  
+  
+  # Add title, xlab or ylab
+  # really annoying https://stackoverflow.com/questions/54987424/in-a-shiny-input-function-can-i-set-the-initial-value-to-be-missing-rather-tha
+  rain_plot_o2 <- reactive({
+    if(nchar(input$title) != 0){ # wants a title
+      if(nchar(input$xlab) !=0 && nchar(input$ylab) != 0){ # wants both labs
+        rain_plot_o1() + labs(title = input$title, x = input$xlab, y = input$ylab, caption  = is.character(input$title))
+      } else if (nchar(input$xlab) == 0 && nchar(input$ylab) != 0){ #only wants ylab
+        rain_plot_o1() + labs(title = input$title, y = input$ylab)
+      } else if (nchar(input$xlab) != 0 && nchar(input$ylab) == 0){ #only wants xlab
+        rain_plot_o1() + labs(title = input$title, x = input$xlab)
+      } else { # wants no labs changing yet a title
+        rain_plot_o1() + labs(title = input$title)
+      }
+    } else if (nchar(input$title) == 0){ # wants no title
+      if(nchar(input$xlab) != 0 && nchar(input$ylab) != 0){ # yet wants both labs
+        rain_plot_o1() + labs(x = input$xlab, y = input$ylab)
+      } else if (nchar(input$xlab) == 0 && nchar(input$ylab) != 0){ #only wants ylab
+        rain_plot_o1() + labs(y = input$ylab)
+      } else if (nchar(input$xlab) != 0 && nchar(input$ylab) ==0){ #only wants xlab
+        rain_plot_o1() + labs(x = input$xlab)
+      } else { # wants no labs changing at all
+        rain_plot_o1()
+      }
+    }
+  })
+  
+  # display axis?   # remove x-axis, remove y-axis
+  rain_plot_o3 <- reactive({
+    if(input$xaxis == TRUE && input$yaxis == TRUE){
+      rain_plot_o2() +
+        theme(axis.title.x=element_blank(),axis.text.x=element_blank(),axis.ticks.x=element_blank(),
+              axis.title.y=element_blank(),axis.text.y=element_blank(),axis.ticks.y=element_blank())
+    }else if(input$xaxis == TRUE && input$yaxis == FALSE){
+      rain_plot_o2() +
+        theme(axis.title.x=element_blank(),axis.text.x=element_blank(),axis.ticks.x=element_blank())
+    }else if(input$xaxis == FALSE && input$yaxis == TRUE){
+      rain_plot_o2() +
+          theme(axis.title.y=element_blank(),axis.text.y=element_blank(),axis.ticks.y=element_blank())
+    }else
+      rain_plot_o2()
+  })
+  
+  
+  
+  ## Display the rain plot
+  output$rain <- renderPlot({
+    rain_plot_o3()
+  },
+    # width = 700,
+    # height = 550,
+    width = function() input$width,
+    height = function() input$height
+    # res = 96,
+)
+  
+  w <- function(){
+    return(input$width)
+  }
+  h <- function(){
+    return(input$height)
+  }
   
   output$downloadPlotPDF <- downloadHandler(
     filename = function(file) {
@@ -306,7 +387,9 @@ server <- function(input, output) {
       #ifelse(is.null(input$DataFile), return(), str_c(input$Title, ".png"))
     },
     content = function(file) {
-      ggsave(file, plot = rain_plot(), units = "mm", device = "pdf") # width = 290, height = 265, 
+      
+      ggsave(file, plot = rain_plot(), units = "mm", device = "pdf", 
+             width = w(), height = h()) # width = 290, height = 265, 
     }
   )
   output$downloadPlotSVG <- downloadHandler(
@@ -314,7 +397,8 @@ server <- function(input, output) {
       "rain_plot.svg"
     },
     content = function(file) {
-      ggsave(file, plot = rain_plot(), units = "mm", device = "svg")
+      ggsave(file, plot = rain_plot(), units = "mm", device = "svg",
+             width = w(), height = h())
     }
   )
   output$downloadPlotPNG <- downloadHandler(
@@ -322,7 +406,8 @@ server <- function(input, output) {
       "rain_plot.png"
     },
     content = function(file) {
-      ggsave(file, plot = rain_plot(), units = "mm", device = "png", bg = "white")
+      ggsave(file, plot = rain_plot(), units = "mm", device = "png", bg = "white",
+             width = w(), height = h())
     }
   )
 }
@@ -337,9 +422,18 @@ server <- function(input, output) {
 shinyApp(ui = ui, server = server, options = list(launch.browser = T))
 
 
-
-
 # when the user uploads data, it should switch to user data?
+
+
+
+
+
+
+
+
+
+
+
 
 
 
