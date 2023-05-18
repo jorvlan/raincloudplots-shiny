@@ -98,15 +98,21 @@ ui <- dashboardPage(skin = 'black',
                                 #                                                                                        "Semicolon" = ";",
                                 #                                                                                        "Space" = " ")),
                                 fluidRow(                                  
-                                  shiny::column(width = 2, uiOutput("DataSource")),
-                                  shiny::column(width = 2,
-                                                radioButtons(inputId = "inputType",
-                                                             label = "",
-                                                             choices = c("User Data", "Iris Data"), # "Example Data"),
-                                                             selected = "Iris Data")),
-
-                                  shiny::column(width = 2,
-                                                checkboxInput(inputId = "toggle_tidy", label = "Convert to tidy", value = FALSE)),
+                                  shiny::column(width = 3, uiOutput("DataSource")),
+                                  # shiny::column(1, checkboxInput(inputId = "inputType", label = "Iris Data", value = TRUE))),
+                                  # shiny::column(width = 2,
+                                  #               radioButtons(inputId = "inputType",
+                                  #                            label = "",
+                                  #                            choices = c("User Data", "Iris Data"), # "Example Data"),
+                                  #                            selected = "Iris Data"))),
+                                  shiny::column(width = 2, uiOutput("picker_variable")),
+                                  shiny::column(width = 2, uiOutput("picker_group"))
+                                  # fluidRow(
+                                  #   sidebarPanel(
+                                  #     uiOutput("picker_variable"),
+                                  #     uiOutput("picker_group")
+                                  #     #actionButton("variable", "Variable"),
+                                  #   ),
                                   
                                 ),
                                 
@@ -132,27 +138,8 @@ ui <- dashboardPage(skin = 'black',
                                  }"))
                                   )
                                 ),
-                                shiny::br(),
+                                #shiny::br(),
                                 
-                                # # View Final Data Frame
-                                # fluidRow(
-                                #   uiOutput("FinalData")
-                                # ),
-                                shiny::br(),
-                                fluidRow(
-                                  sidebarPanel(
-                                  uiOutput("picker_variable"),
-                                  uiOutput("picker_group")
-                                  #actionButton("variable", "Variable"),
-                                ),
-                                # sidebarPanel(
-                                # sliderInput("height", "height", min = 100, max = 1000, value = 500, step = 100),
-                                # sliderInput("width", "width", min = 100, max = 1000, value = 700, step = 100)),
-                                ),
-                                # sidebarPanel(
-                                #   uiOutput("picker_group")#,
-                                # ),
-                                shiny::br(), shiny::br(),
                                 tabBox(
                                   title = "",
                                   # The id lets us use input$tabset1 on the server to find the current tab
@@ -240,24 +227,42 @@ server <- function(input, output) {
   }
   )
   
-  ## Read In User-File (need to write function for other data types)
+  
   userdata <- reactive({
-    if(input$inputType == "User Data"){
-      if (is.null(input$userfile$datapath)) return(NULL)
-      if (grepl(".sav", input$userfile$datapath)){
+    if (is.null(input$userfile$datapath)) {
+      df <- read.csv("./data/iris_ct.csv")
+      } else if (grepl(".sav", input$userfile$datapath)){
         df <- foreign::read.spss(input$userfile$datapath, to.data.frame = TRUE)
-      } else if (grepl(".xls", input$userfile$datapath)){
+      }else if (grepl(".xls", input$userfile$datapath)){
         df <- read.table(input$userfile$datapath, sep="\t", header = TRUE)
       } else {
-        df <- read.csv(input$userfile$datapath, header = TRUE)
-      }
-    } else if (input$inputType == "Iris Data"){
-      df <- read.csv("./data/iris_ct.csv")
-    }
-    if(input$toggle_tidy == TRUE){
-      gather(df)} else{df}
-  })
+        df <- read.csv(input$userfile$datapath, header = TRUE)}
+    })
   
+  
+  
+  # ## Read In User-File (need to write function for other data types)
+  # userdata <- reactive({
+  #   if(input$inputType == "User Data"){
+  #     if (is.null(input$userfile$datapath)) {
+  #       return(NULL)
+  #     } else if (grepl(".sav", input$userfile$datapath)){
+  #       df <- foreign::read.spss(input$userfile$datapath, to.data.frame = TRUE)
+  #     } else if (grepl(".xls", input$userfile$datapath)){
+  #       df <- read.table(input$userfile$datapath, sep="\t", header = TRUE)
+  #     } else {
+  #       df <- read.csv(input$userfile$datapath, header = TRUE)
+  #       print("here")
+  #       print(input$inputType)
+  #     }}
+  #   else (input$inputType == "Iris Data")
+  #   print("here2")
+  #     df <- read.csv("./data/iris_ct.csv")
+  #   # if(input$toggle_tidy == TRUE){
+  #   #   gather(df)} 
+  #   #   else{df}
+  # })
+  # 
   # you can nest reactives or just assign
   
   # # for toggle_tidy
@@ -272,7 +277,6 @@ server <- function(input, output) {
   ## Display User Data in Table
   output$UserData <- renderUI({
     if(is.null(userdata())) return(NULL)
-
     req(userdata())
     box(
       title = "Uploaded data", width = NULL, status = "primary",
@@ -458,8 +462,6 @@ shinyApp(ui = ui, server = server, options = list(launch.browser = T))
 # single rain plot color
 
 # group color pallet
-
-
 
 
 
