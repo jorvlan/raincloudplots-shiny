@@ -182,17 +182,18 @@ ui <- dashboardPage(skin = 'black',
                                            shiny::column(2, checkboxInput(inputId = "xaxis", label = "Remove", value = FALSE))),
                                   fluidRow(shiny::column(2, textInput("ylab", "Label for y-axis")),
                                            shiny::column(2, checkboxInput(inputId = "yaxis", label = "Remove", value = FALSE))),
+                                  fluidRow(shiny::column(2, textInput("llab", "Label for legend")),
+                                           shiny::column(2, checkboxInput(inputId = "leg", label = "Remove", value = FALSE))),
                                   fluidRow(shiny::column(2, numericInput("basesize", "Base Size", value = 16, min = 2, max = 50, step = 2, width = '50%')),
                                            shiny::column(2, numericInput("height", "Height", value = 500, min = 100, max = 1000, step = 100, width = '50%')),
-                                           shiny::column(2, numericInput("width", "Width", value = 700, min = 100, max = 1000, step = 100, width = '50%')))
-                                  
-                                  
-                                  # shiny::column(5,
-                                  #               numericInput("basesize", "Base Size", value = 16, min = 2, max = 50, step = 2, width = '20%'),
-                                  #               numericInput("height", "Height", value = 500, min = 100, max = 1000, step = 100),
-                                  #               numericInput("width", "Width", value = 700, min = 100, max = 1000, step = 100))
-                                  # sliderInput("height", "Height", min = 100, max = 1000, value = 500, step = 100),
-                                  # sliderInput("width", "Width", min = 100, max = 1000, value = 700, step = 100)),
+                                           shiny::column(2, numericInput("width", "Width", value = 700, min = 100, max = 1000, step = 100, width = '50%'))),
+                                  fluidRow(shiny::column(3, selectInput("colorSingle", "Single rainplot color", 
+                                                                        choices = c("white", "yellow", "red","coral", "pink", "lightgreen", "darkgreen", "lightblue", "darkblue", "purple","gray", "black"), 
+                                                                        selected = "coral")),
+                                           shiny::column(3, selectInput("colorPal", "Group rainplot Palettes", 
+                                                                        choices = c("Blues", "Oranges","Reds", "Greens","Purples", "Dark2", "Pastel1", "BuGn", "YlOrRd", "RdPu", "OrRd", "Accent", "RdBu"), 
+                                                                        selected = "Dark2")))
+                              
                                            ),
 
                                   tabPanel(title = "Raincloud Plot", value =  "", 
@@ -308,8 +309,8 @@ server <- function(input, output) {
              aes(y = .data[[input$pick_var]], 
                  x = 1)) + 
         geom_rain(rain.side = input$side, alpha = input$alpha,
-          boxplot.args = list(fill = "blue", outlier.shape = NA),
-          violin.args = list(fill = "blue")) +
+          boxplot.args = list(fill = input$colorSingle, outlier.shape = NA),
+          violin.args = list(fill = input$colorSingle)) +
         theme_minimal(base_size = input$basesize)
     } else {
       if(input$overlap == TRUE){
@@ -318,13 +319,15 @@ server <- function(input, output) {
                                fill = .data[[input$pick_grp]])) + 
           geom_rain(rain.side = input$side, alpha = input$alpha,
                     boxplot.args.pos = list(position = ggpp::position_dodgenudge(x = .1), width = 0.1)) +
-          theme_minimal(base_size = input$basesize)
+          theme_minimal(base_size = input$basesize) +
+          scale_fill_brewer(palette = input$colorPal)
       }else{
         ggplot(userdata(), aes(y = .data[[input$pick_var]], 
                                x = .data[[input$pick_grp]],
                                fill = .data[[input$pick_grp]])) + 
           geom_rain(rain.side = input$side, alpha = input$alpha) +
-          theme_minimal(base_size = input$basesize)
+          theme_minimal(base_size = input$basesize) +
+          scale_fill_brewer(palette = input$colorPal)
       }
     }
   })
@@ -365,9 +368,6 @@ server <- function(input, output) {
     }
   })
   
-  
-  
-  
   # display axis?   # remove x-axis, remove y-axis
   rain_plot_o3 <- reactive({
     if(input$xaxis == TRUE && input$yaxis == TRUE){
@@ -383,12 +383,23 @@ server <- function(input, output) {
     }else
       rain_plot_o2()
   })
-  
-  
+
+  rain_plot_o4 <- reactive({
+    if(!is.null(input$pick_grp)){
+      if(nchar(input$llab) != 0 && input$leg == FALSE){
+        rain_plot_o3() + labs(fill = input$llab)
+      } else if (input$leg == TRUE) {
+        rain_plot_o3() + theme(legend.position = "none")
+      } else
+        rain_plot_o3()
+    } else
+    rain_plot_o3()
+  })
+
   
   ## Display the rain plot
   output$rain <- renderPlot({
-    rain_plot_o3()
+    rain_plot_o4()
   },
     # width = 700,
     # height = 550,
@@ -444,7 +455,9 @@ shinyApp(ui = ui, server = server, options = list(launch.browser = T))
 
 
 
+# single rain plot color
 
+# group color pallet
 
 
 
@@ -455,10 +468,10 @@ shinyApp(ui = ui, server = server, options = list(launch.browser = T))
 # you could allow people to pick the scale_fill_brewer options?
 # Hmmmm but that wouldn't work with a single raincloud...
 
-gplot(iris, aes(1, Sepal.Length, fill = Species)) + 
+ggplot(iris, aes(1, Sepal.Length, fill = Species)) + 
   geom_rain() + 
-  scale_fill_manual(values = c("blue", "blue", "blue"))
-
+  labs(fill ='HMmmm') +
+  labs(x = "please")
 
 
 
