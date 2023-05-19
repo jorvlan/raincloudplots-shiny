@@ -160,10 +160,7 @@ ui <- dashboardPage(skin = 'black',
                                            ### change labs on axis
                                            ### background themes (xkyd!)
                                            ### base size of theme
-                                  fluidRow(shiny::column(1, selectInput("side", "Side", choices = c("r", "l"), selected = "r")),
-                                           shiny::column(2, numericInput("alpha", "Alpha", value = 1, min = 0.1, max = 1, step = .1, width = "35%")),
-                                           shiny::column(1, checkboxInput(inputId = "flip", label = "Flip plot", value = FALSE)),
-                                           shiny::column(1, checkboxInput(inputId = "overlap", label = "Overlap groups", value = FALSE))),
+                                  box(title = "Basic features", width = NULL, status = "primary", collapsible = TRUE, collapsed = FALSE,
                                   fluidRow(shiny::column(5, textInput("title", "Plot Title"))),
                                   fluidRow(shiny::column(2, textInput("xlab", "Label for x-axis")),
                                            shiny::column(2, checkboxInput(inputId = "xaxis", label = "Remove", value = FALSE))),
@@ -179,14 +176,21 @@ ui <- dashboardPage(skin = 'black',
                                                                         selected = "coral")),
                                            shiny::column(3, selectInput("colorPal", "Group rainplot Palettes", 
                                                                         choices = c("Blues", "Oranges","Reds", "Greens","Purples", "Dark2", "Pastel1", "BuGn", "YlOrRd", "RdPu", "OrRd", "Accent", "RdBu"), 
-                                                                        selected = "Dark2"))),
+                                                                        selected = "Dark2")))),
                                   box(title = "Advanced features", width = NULL, status = "primary", collapsible = TRUE, collapsed = TRUE,
-                                      fluidRow(shiny::column(2, numericInput("d_width", "Dot width", value = 0.05, min = 0, max = 1, step = .05, width = '50%')),
-                                               shiny::column(2, numericInput("d_nudge", "Dot nudge", value = 0, min = 0, max = 1, step = .05, width = '50%'))),
-                                      fluidRow(shiny::column(2, numericInput("b_width", "Box width", value = 0.05, min = 0, max = 1, step = .05, width = '50%')),
-                                               shiny::column(2, numericInput("b_width", "Box nudge", value = .1, min = 0, max = 1, step = .05, width = '50%'))),
-                                      fluidRow(shiny::column(2, numericInput("v_width", "Violin width", value = 0.1, min = 0, max = 1, step = .05, width = '50%')),
-                                               shiny::column(2, numericInput("v_width", "Violin nudge", value = 0.15, min = 0, max = 1, step = .05, width = '50%'))))
+                                      fluidRow(shiny::column(3, selectInput("themes", "Plot Themes", 
+                                                                            choices = c("classic", "minimal", "bw"), 
+                                                                            selected = "classic")),
+                                               shiny::column(1, selectInput("side", "Side", choices = c("r", "l"), selected = "r", width = "85%")),
+                                               shiny::column(1, numericInput("alpha", "Alpha", value = 1, min = 0.1, max = 1, step = .1, width = "85%")),
+                                               shiny::column(1, checkboxInput(inputId = "flip", label = "Flip plot", value = FALSE)),
+                                               shiny::column(1, checkboxInput(inputId = "overlap", label = "Overlap groups", value = FALSE))),
+                                      fluidRow(shiny::column(2, numericInput("d_width", "Dot width", value = 0.05, min = 0, max = 1, step = .05, width = '80%')),
+                                               shiny::column(2, numericInput("d_nudge", "Dot nudge", value = 0, min = 0, max = 1, step = .05, width = '80%'))),
+                                      fluidRow(shiny::column(2, numericInput("b_width", "Box width", value = 0.05, min = 0, max = 1, step = .05, width = '80%')),
+                                               shiny::column(2, numericInput("b_nudge", "Box nudge", value = .1, min = 0, max = 1, step = .05, width = '80%'))),
+                                      fluidRow(shiny::column(2, numericInput("v_width", "Violin width", value = 0.7, min = 0, max = 1, step = .05, width = '80%')),
+                                               shiny::column(2, numericInput("v_nudge", "Violin nudge", value = 0.15, min = 0, max = 1, step = .05, width = '80%'))))
                                            ),
 
                                   tabPanel(title = "Raincloud Plot", value =  "", 
@@ -324,25 +328,43 @@ server <- function(input, output) {
                  x = 1)) + 
         geom_rain(rain.side = input$side, alpha = input$alpha,
           boxplot.args = list(fill = input$colorSingle, outlier.shape = NA),
-          violin.args = list(fill = input$colorSingle)) +
-        theme_minimal(base_size = input$basesize)
+          violin.args = list(fill = input$colorSingle),
+          point.args.pos = rlang::list2(position = ggpp::position_jitternudge(width = input$d_width, nudge.from = "jittered", seed = 69, x = input$d_nudge)),
+          boxplot.args.pos = list(position = ggpp::position_dodgenudge(x = input$b_nudge), width = input$b_width),
+          violin.args.pos = rlang::list2(side = "r", width = input$v_width, position = position_nudge(x = input$v_nudge)))
     } else {
       if(input$overlap == TRUE){
         ggplot(userdata(), aes(y = .data[[input$pick_var]], 
                                x = 1,
                                fill = .data[[input$pick_grp]])) + 
           geom_rain(rain.side = input$side, alpha = input$alpha,
-                    boxplot.args.pos = list(position = ggpp::position_dodgenudge(x = .1), width = 0.1)) +
-          theme_minimal(base_size = input$basesize) +
+                    point.args.pos = rlang::list2(position = ggpp::position_jitternudge(width = input$d_width, nudge.from = "jittered", seed = 69, x = input$d_nudge)),
+                    boxplot.args.pos = list(position = ggpp::position_dodgenudge(x = input$b_nudge), width = input$b_width),
+                    violin.args.pos = rlang::list2(side = "r", width = input$v_width, position = position_nudge(x = input$v_nudge))) +
           scale_fill_brewer(palette = input$colorPal)
       }else{
         ggplot(userdata(), aes(y = .data[[input$pick_var]], 
                                x = .data[[input$pick_grp]],
                                fill = .data[[input$pick_grp]])) + 
-          geom_rain(rain.side = input$side, alpha = input$alpha) +
-          theme_minimal(base_size = input$basesize) +
+          geom_rain(rain.side = input$side, alpha = input$alpha,
+                    point.args.pos = rlang::list2(position = ggpp::position_jitternudge(width = input$d_width, nudge.from = "jittered", seed = 69, x = input$d_nudge)),
+                    boxplot.args.pos = list(position = ggpp::position_dodgenudge(x = input$b_nudge), width = input$b_width),
+                    violin.args.pos = rlang::list2(side = "r", width = input$v_width, position = position_nudge(x = input$v_nudge))) +
           scale_fill_brewer(palette = input$colorPal)
       }
+    }
+  })
+  
+  
+  #### themezzz
+  
+  rain_plot_o0 <- reactive({
+    if(input$themes == "classic"){
+      rain_plot() + theme_classic(base_size = input$basesize)
+    } else if (input$themes == "minimal") {
+      rain_plot() + theme_minimal(base_size = input$basesize)
+    } else if (input$themes == "bw") {
+      rain_plot() + theme_bw(base_size = input$basesize)
     }
   })
 
@@ -351,9 +373,9 @@ server <- function(input, output) {
   # flipping
   rain_plot_o1 <- reactive({
     if(input$flip == TRUE){
-    rain_plot() + coord_flip()
+      rain_plot_o0() + coord_flip()
   } else
-    rain_plot()
+    rain_plot_o0()
   })
   
   
@@ -467,7 +489,6 @@ shinyApp(ui = ui, server = server, options = list(launch.browser = T))
 
 
 
-
 # theme_bw()
 # theme_classic()
 # theme_dark()
@@ -475,18 +496,25 @@ shinyApp(ui = ui, server = server, options = list(launch.browser = T))
 # d_width,etc
 # I am a bit afraid this will override the rain.side arg 
 
-ggplot(iris, aes(1, Sepal.Length)) +
-  geom_rain(point.args.pos = rlang::list2(position = ggpp::position_jitternudge(width = 0.04, nudge.from = "jittered", seed = 42, x = -.2)),
-            boxplot.args.pos = rlang::list2(width = 0.05, position = ggpp::position_dodgenudge(x = 0.1)),
-            violin.args.pos = rlang::list2(side = "r", width = 0.7, position = position_nudge(x = .2)))
-            
 
-ggplot(iris, aes(1, Sepal.Length, fill = Species)) +
-  geom_rain()
+# you broke the groups overlapped by choosing side = "l"
 
-
-ggplot(iris, aes(Species, Sepal.Length, fill = Species)) +
-  geom_rain()
+# ggplot(iris, aes(1, Sepal.Length)) +
+#   geom_rain(rain.side = "r",
+#     point.args.pos = rlang::list2(position = ggpp::position_jitternudge(width = 0.04, nudge.from = "jittered", seed = 42, x = 0)),
+#             boxplot.args.pos = rlang::list2(width = 0.05, position = ggpp::position_dodgenudge(x = 0.1)),
+#             violin.args.pos = rlang::list2(side = "r", width = 0.7, position = position_nudge(x = .3)))
+#             
+# 
+# ggplot(iris, aes(1, Sepal.Length, fill = Species)) +
+#   geom_rain(rain.side = "r",
+#             point.args.pos = rlang::list2(position = ggpp::position_jitternudge(width = 0.05, nudge.from = "jittered", seed = 42, x = -0.1)),
+#             boxplot.args.pos = rlang::list2(width = 0.05, position = ggpp::position_dodgenudge(x = 0.1)),
+#             violin.args.pos = rlang::list2(side = "r", width = 0.7, position = position_nudge(x = .15)))
+# 
+# 
+# ggplot(iris, aes(Species, Sepal.Length, fill = Species)) +
+#   geom_rain()
 
 
 
