@@ -164,7 +164,7 @@ ui <- dashboardPage(skin = 'black',
                                            shiny::column(2, numericInput("alpha", "Alpha", value = 1, min = 0.1, max = 1, step = .1, width = "35%")),
                                            shiny::column(1, checkboxInput(inputId = "flip", label = "Flip plot", value = FALSE)),
                                            shiny::column(1, checkboxInput(inputId = "overlap", label = "Overlap groups", value = FALSE))),
-                                  fluidRow(textInput("title", "Plot Title")),
+                                  fluidRow(shiny::column(5, textInput("title", "Plot Title"))),
                                   fluidRow(shiny::column(2, textInput("xlab", "Label for x-axis")),
                                            shiny::column(2, checkboxInput(inputId = "xaxis", label = "Remove", value = FALSE))),
                                   fluidRow(shiny::column(2, textInput("ylab", "Label for y-axis")),
@@ -179,8 +179,14 @@ ui <- dashboardPage(skin = 'black',
                                                                         selected = "coral")),
                                            shiny::column(3, selectInput("colorPal", "Group rainplot Palettes", 
                                                                         choices = c("Blues", "Oranges","Reds", "Greens","Purples", "Dark2", "Pastel1", "BuGn", "YlOrRd", "RdPu", "OrRd", "Accent", "RdBu"), 
-                                                                        selected = "Dark2")))
-                              
+                                                                        selected = "Dark2"))),
+                                  box(title = "Advanced features", width = NULL, status = "primary", collapsible = TRUE, collapsed = TRUE,
+                                      fluidRow(shiny::column(2, numericInput("d_width", "Dot width", value = 0.05, min = 0, max = 1, step = .05, width = '50%')),
+                                               shiny::column(2, numericInput("d_nudge", "Dot nudge", value = 0, min = 0, max = 1, step = .05, width = '50%'))),
+                                      fluidRow(shiny::column(2, numericInput("b_width", "Box width", value = 0.05, min = 0, max = 1, step = .05, width = '50%')),
+                                               shiny::column(2, numericInput("b_width", "Box nudge", value = .1, min = 0, max = 1, step = .05, width = '50%'))),
+                                      fluidRow(shiny::column(2, numericInput("v_width", "Violin width", value = 0.1, min = 0, max = 1, step = .05, width = '50%')),
+                                               shiny::column(2, numericInput("v_width", "Violin nudge", value = 0.15, min = 0, max = 1, step = .05, width = '50%'))))
                                            ),
 
                                   tabPanel(title = "Raincloud Plot", value =  "", 
@@ -290,7 +296,8 @@ server <- function(input, output) {
     pickerInput(inputId = 'pick_var', 
                 label = 'Choose Variable', 
                 choices = colnames(userdata()),
-                options = list(`actions-box` = TRUE),multiple = F)
+                options = list(`actions-box` = TRUE),
+                multiple = F)
   })
   
   output$picker_group <- renderUI({
@@ -335,6 +342,7 @@ server <- function(input, output) {
       }
     }
   })
+
   
   ##### making nested options
   # flipping
@@ -426,7 +434,7 @@ server <- function(input, output) {
     },
     content = function(file) {
       
-      ggsave(file, plot = rain_plot(), units = "mm", device = "pdf", 
+      ggsave(file, plot = rain_plot_o4(), units = "mm", device = "pdf", 
              width = w(), height = h()) # width = 290, height = 265, 
     }
   )
@@ -435,7 +443,7 @@ server <- function(input, output) {
       "rain_plot.svg"
     },
     content = function(file) {
-      ggsave(file, plot = rain_plot(), units = "mm", device = "svg",
+      ggsave(file, plot = rain_plot_o4(), units = "mm", device = "svg",
              width = w(), height = h())
     }
   )
@@ -444,7 +452,7 @@ server <- function(input, output) {
       "rain_plot.png"
     },
     content = function(file) {
-      ggsave(file, plot = rain_plot(), units = "mm", device = "png", bg = "white",
+      ggsave(file, plot = rain_plot_o4(), units = "mm", device = "png", bg = "white",
              width = w(), height = h())
     }
   )
@@ -455,26 +463,27 @@ server <- function(input, output) {
 shinyApp(ui = ui, server = server, options = list(launch.browser = T))
 
 
-# when the user uploads data, it should switch to user data?
 
 
+# theme_bw()
+# theme_classic()
+# theme_dark()
 
-# single rain plot color
+# d_width,etc
+# I am a bit afraid this will override the rain.side arg 
 
-# group color pallet
+ggplot(iris, aes(1, Sepal.Length)) +
+  geom_rain(point.args.pos = rlang::list2(position = ggpp::position_jitternudge(width = 0.04, nudge.from = "jittered", seed = 42, x = -.2)),
+            boxplot.args.pos = rlang::list2(width = 0.05, position = ggpp::position_dodgenudge(x = 0.1)),
+            violin.args.pos = rlang::list2(side = "r", width = 0.7, position = position_nudge(x = .2)))
+            
+
+ggplot(iris, aes(1, Sepal.Length, fill = Species)) +
+  geom_rain()
 
 
-
-
-
-# you could allow people to pick the scale_fill_brewer options?
-# Hmmmm but that wouldn't work with a single raincloud...
-
-ggplot(iris, aes(1, Sepal.Length, fill = Species)) + 
-  geom_rain() + 
-  labs(fill ='HMmmm') +
-  labs(x = "please")
-
+ggplot(iris, aes(Species, Sepal.Length, fill = Species)) +
+  geom_rain()
 
 
 
