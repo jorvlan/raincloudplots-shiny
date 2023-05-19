@@ -295,9 +295,12 @@ server <- function(input, output) {
   output$picker_variable <- renderUI({
     pickerInput(inputId = 'pick_var', 
                 label = 'Choose Variable', 
-                choices = colnames(userdata()),
-                options = list(`actions-box` = TRUE),
-                multiple = F)
+                selected = colnames(userdata())[as.logical(sapply(userdata(), is.numeric))][1],
+                multiple = FALSE,
+                options = list(pickerOptions(maxOptions = 1)),
+                choices = colnames(userdata())[as.logical(sapply(userdata(), is.numeric))]
+                #options = list(`actions-box` = TRUE)
+                )
   })
   
   output$picker_group <- renderUI({
