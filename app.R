@@ -84,9 +84,7 @@ ui <- dashboardPage(skin = 'black',
                                   tabBox(title = "",
                                          id = "tabset-about", width = "10",
                                          tabPanel("Background", includeHTML("about.html"))))),
-                      
-                        
-                        
+                  
                   
                         # -| 2nd tab content ----
                         tabItem(tabName = "uploaddata",
@@ -99,21 +97,9 @@ ui <- dashboardPage(skin = 'black',
                                 #                                                                                        "Space" = " ")),
                                 fluidRow(                                  
                                   shiny::column(width = 3, uiOutput("DataSource")),
-                                  # shiny::column(1, checkboxInput(inputId = "inputType", label = "Iris Data", value = TRUE))),
-                                  # shiny::column(width = 2,
-                                  #               radioButtons(inputId = "inputType",
-                                  #                            label = "",
-                                  #                            choices = c("User Data", "Iris Data"), # "Example Data"),
-                                  #                            selected = "Iris Data"))),
                                   shiny::column(width = 2, uiOutput("picker_variable")),
                                   shiny::column(width = 2, uiOutput("picker_group"))
-                                  # fluidRow(
-                                  #   sidebarPanel(
-                                  #     uiOutput("picker_variable"),
-                                  #     uiOutput("picker_group")
-                                  #     #actionButton("variable", "Variable"),
-                                  #   ),
-                                  
+
                                 ),
                                 
                                 # View User Data Table
@@ -149,17 +135,6 @@ ui <- dashboardPage(skin = 'black',
                                            # DT::dataTableOutput("UserData")
                                            ),
                                   tabPanel(title = "Plot Features", value = "",
-                                  #          # sidebarPanel(
-                                  #          # sliderInput("height", "height", min = 100, max = 1000, value = 500, step = 100),
-                                  #          # sliderInput("width", "width", min = 100, max = 1000, value = 700, step = 100)),
-                                  # )
-                                           ### Here you add (flipping, colors & color pallets)
-                                           ### size adjustments
-                                           ### alpha
-                                           ### overlapping option
-                                           ### change labs on axis
-                                           ### background themes (xkyd!)
-                                           ### base size of theme
                                   box(title = "Basic features", width = NULL, status = "primary", collapsible = TRUE, collapsed = FALSE,
                                   fluidRow(shiny::column(5, textInput("title", "Plot Title"))),
                                   fluidRow(shiny::column(2, textInput("xlab", "Label for x-axis")),
@@ -204,24 +179,7 @@ ui <- dashboardPage(skin = 'black',
 
 # Define server functions ----
 server <- function(input, output) { 
-  # The currently selected tab from the first box
-  # output$tabset1Selected <- renderText({
-  #   input$tabset1
-  # })
-  
-  #### DISPLAY example data ##################
-  
- # output$df_example_tidy_1x1 <- DT::renderDataTable({
-    #DT::datatable(
-#    df_example_tidy_1x1})
-  
- # output$df_example_tidy_2x2 <- DT::renderDataTable({
-    #       DT::datatable(
-  #  df_example_tidy_2x2})
-  
-  
 
-  
   ## Select Data Source
   output$DataSource <- renderUI({
     input$inputType == "User Data"
@@ -249,41 +207,7 @@ server <- function(input, output) {
         df <- read.csv(input$userfile$datapath, header = TRUE)}
     })
   
-  
-  
-  # ## Read In User-File (need to write function for other data types)
-  # userdata <- reactive({
-  #   if(input$inputType == "User Data"){
-  #     if (is.null(input$userfile$datapath)) {
-  #       return(NULL)
-  #     } else if (grepl(".sav", input$userfile$datapath)){
-  #       df <- foreign::read.spss(input$userfile$datapath, to.data.frame = TRUE)
-  #     } else if (grepl(".xls", input$userfile$datapath)){
-  #       df <- read.table(input$userfile$datapath, sep="\t", header = TRUE)
-  #     } else {
-  #       df <- read.csv(input$userfile$datapath, header = TRUE)
-  #       print("here")
-  #       print(input$inputType)
-  #     }}
-  #   else (input$inputType == "Iris Data")
-  #   print("here2")
-  #     df <- read.csv("./data/iris_ct.csv")
-  #   # if(input$toggle_tidy == TRUE){
-  #   #   gather(df)} 
-  #   #   else{df}
-  # })
-  # 
-  # you can nest reactives or just assign
-  
-  # # for toggle_tidy
-  # mod_userdata <- reactive({
-  #   if(input$toggle_tidy == TRUE){
-  #     gather(userdata())
-  #   } else userdata()})
-  
-  
-  
-  
+
   ## Display User Data in Table
   output$UserData <- renderUI({
     if(is.null(userdata())) return(NULL)
@@ -318,8 +242,6 @@ server <- function(input, output) {
                 )
   })
   
-  # ct <- reactive({input$pick_var})
-
   
   rain_plot <- reactive({
     if(is.null(input$pick_grp)){
@@ -488,13 +410,6 @@ server <- function(input, output) {
 shinyApp(ui = ui, server = server, options = list(launch.browser = T))
 
 
-
-# theme_bw()
-# theme_classic()
-# theme_dark()
-
-# d_width,etc
-# I am a bit afraid this will override the rain.side arg 
 
 
 # you broke the groups overlapped by choosing side = "l"
