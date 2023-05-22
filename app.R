@@ -3,6 +3,8 @@
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # raincloudplots: A shinyApp for easy & flexible data visualization
 #
+# see github.com/njudd/ggrain
+#
 # Raincloud plots were created and developed by Micah Allen, Davide Poggiali, Kirstie Whitaker, Tom Rhys Marshall, Jordy van Langen and Rogier Kievit. 
 # New to 'raincloudplots'? Please check-out our paper:
 #
@@ -15,7 +17,7 @@
 # One of the tools that we have created is this ShinyApp.
 #
 # More information about Raincloud plots in general is available on our dedicated GitHub page: https://github.com/RainCloudPlots/RainCloudPlots
-# More information about this specific "raincloudplots" ShinyApp is available on our other dedicated GitHub page: https://github.com/jorvlan/raincloudplots-shiny
+# More information about this specific "ggrain" ShinyApp is available on our other dedicated GitHub page: https://github.com/njudd/ggrain
 # More information about our new "Raincloud plots 2.0" project is available on the website of NWO (Dutch Research Counsil): [https://nwo.nl/en/projects/203001011]
 # 
 # If you have a technical question or a problem using our ShinyApp, please open an issue on the designated GitHub page: https://github.com/jorvlan/raincloudplots-shiny
@@ -24,7 +26,7 @@
 # |- Credits ----
 # written by: Nicholas Judd, Rogier Kievit & Jordy van Langen
 # date: 28-05-2023
-# contact:jordyvanlangen@gmail.com or DM on Twitter: https://twitter.com/jordyvanlangen
+# contact:jordyvanlangen@gmail.com/nickkjudd@gmail.com or DM on Twitter: https://twitter.com/jordyvanlangen
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 # Load packages ----
