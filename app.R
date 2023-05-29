@@ -39,6 +39,11 @@ library(datasets)
 library(DT)
 library(ggrain)
 
+#need to get the ggplot2 call back
+library(dplyr)
+library(purrr)
+library(styler)
+
 
 #setwd("/Users/jordyvanlangen/Desktop/raincloudplots_shiny/raincloudplots")
 #setwd("/Users/jordyvanlangen/Desktop/raincloudplots_shiny/raincloudplots/www")
@@ -146,6 +151,7 @@ ui <- dashboardPage(skin = 'black',
                                   fluidRow(shiny::column(2, textInput("llab", "Label for legend")),
                                            shiny::column(2, checkboxInput(inputId = "leg", label = "Remove", value = FALSE))),
                                   fluidRow(shiny::column(2, numericInput("basesize", "Base Size", value = 30, min = 2, max = 100, step = 2, width = '50%')),
+                                           shiny::column(2, numericInput("pointsize", "Point Size", value = 1.5, min = 0, max = 10, step = .5, width = '50%')),
                                            shiny::column(2, numericInput("height", "Height", value = 500, min = 100, max = 1000, step = 100, width = '50%')),
                                            shiny::column(2, numericInput("width", "Width", value = 700, min = 100, max = 1000, step = 100, width = '50%'))),
                                   fluidRow(shiny::column(3, selectInput("colorSingle", "Single rainplot color", 
@@ -175,6 +181,10 @@ ui <- dashboardPage(skin = 'black',
                                            downloadButton("downloadPlotPDF", "Download pdf-file", style = "padding: 5px 5px 5px 5px; margin: 300px 5px 5px 5px; "),
                                            downloadButton("downloadPlotSVG", "Download svg-file", style = "padding: 5px 5px 5px 5px; margin: 300px 5px 5px 5px; "),
                                            downloadButton("downloadPlotPNG", "Download png-file", style = "padding: 5px 5px 5px 5px; margin: 300px 5px 5px 5px; "))
+                                  # tabPanel(title = "R Code", value = "",
+                                  #          mainPanel(
+                                  #            verbatimTextOutput("code")
+                                  #          ))
                                 )
                         ))))
 
@@ -251,6 +261,7 @@ server <- function(input, output) {
              aes(y = .data[[input$pick_var]], 
                  x = 1)) + 
         geom_rain(rain.side = input$side, alpha = input$alpha,
+                  point.args = list(size = input$pointsize),
           boxplot.args = list(fill = input$colorSingle, outlier.shape = NA),
           violin.args = list(fill = input$colorSingle),
           point.args.pos = rlang::list2(position = ggpp::position_jitternudge(width = input$d_width, nudge.from = "jittered", seed = 69, x = input$d_nudge)),
@@ -262,6 +273,7 @@ server <- function(input, output) {
                                x = 1,
                                fill = .data[[input$pick_grp]])) + 
           geom_rain(rain.side = input$side, alpha = input$alpha,
+                    point.args = list(size = input$pointsize),
                     point.args.pos = rlang::list2(position = ggpp::position_jitternudge(width = input$d_width, nudge.from = "jittered", seed = 69, x = input$d_nudge)),
                     boxplot.args.pos = list(position = ggpp::position_dodgenudge(x = input$b_nudge), width = input$b_width),
                     violin.args.pos = rlang::list2(side = "r", width = input$v_width, position = position_nudge(x = input$v_nudge))) +
@@ -271,6 +283,7 @@ server <- function(input, output) {
                                x = .data[[input$pick_grp]],
                                fill = .data[[input$pick_grp]])) + 
           geom_rain(rain.side = input$side, alpha = input$alpha,
+                    point.args = list(size = input$pointsize),
                     point.args.pos = rlang::list2(position = ggpp::position_jitternudge(width = input$d_width, nudge.from = "jittered", seed = 69, x = input$d_nudge)),
                     boxplot.args.pos = list(position = ggpp::position_dodgenudge(x = input$b_nudge), width = input$b_width),
                     violin.args.pos = rlang::list2(side = "r", width = input$v_width, position = position_nudge(x = input$v_nudge))) +
@@ -356,7 +369,7 @@ server <- function(input, output) {
     } else
     rain_plot_o3()
   })
-
+  
   
   ## Display the rain plot
   output$rain <- renderPlot({
@@ -405,33 +418,71 @@ server <- function(input, output) {
              width = w(), height = h())
     }
   )
+  
+  ########### ouput R code
+  # from here https://coolbutuseless.github.io/2019/04/26/reverse-engineer-the-ggplot-call-from-a-ggplot-object/
+  
+  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  # reverse_mapping ->  "aes(x = ..., y = ...)"
+  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  # reverse_mapping <- function(mapping) {
+  #   aes_args <- paste(names(mapping), stringr::str_sub(as.character(mapping), start=2), sep = "=", collapse = ", ")
+  #   aes_text <- glue::glue("aes({aes_args})")
+  #   aes_text
+  # }
+  # 
+  # 
+  # #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  # # reverse aesthetic params ->  "size = 3"
+  # #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  # reverse_aes_params <- function(aes_params) {
+  #   if (length(aes_params) == 0) {
+  #     NULL
+  #   } else {
+  #     paste(names(aes_params), unname(aes_params), sep = "=", collapse = ", ")
+  #   }
+  # }
+  # 
+  # 
+  # #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  # # reverse_layer -> "geom_point(aes(mpg, wt), size = 3)"
+  # #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  # reverse_layer <- function(layer) {
+  #   geom_name <- ggplot2:::snakeize(class(layer$geom)[1])
+  #   
+  #   aes_text        <- reverse_mapping(layer$mapping)
+  #   aes_params_text <- reverse_aes_params(layer$aes_params)
+  #   geom_args <- paste(c(aes_text, aes_params_text), collapse = ", ")
+  #   
+  #   
+  #   glue::glue("{geom_name}({geom_args})")
+  # }
+  # 
+  # 
+  # #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  # # Reverse plot
+  # #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  # reverse_plot <- function(p) {
+  #   layers <- p$layers %>% map_chr(reverse_layer)
+  #   
+  #   plot_text <- paste(c("ggplot(data)", layers), collapse = "+\n")
+  #   styler::style_text(plot_text)
+  # }
+  # 
+  # output$code <- renderText({
+  #   
+  #   paste0(reverse_plot(rain_plot_o4()))
+  #   
+  # })
+  
 }
+
+
+
 
 
 # Run the shiny application ----
 shinyApp(ui = ui, server = server, options = list(launch.browser = T))
-
-
-
-
-# you broke the groups overlapped by choosing side = "l"
-
-# ggplot(iris, aes(1, Sepal.Length)) +
-#   geom_rain(rain.side = "r",
-#     point.args.pos = rlang::list2(position = ggpp::position_jitternudge(width = 0.04, nudge.from = "jittered", seed = 42, x = 0)),
-#             boxplot.args.pos = rlang::list2(width = 0.05, position = ggpp::position_dodgenudge(x = 0.1)),
-#             violin.args.pos = rlang::list2(side = "r", width = 0.7, position = position_nudge(x = .3)))
-#             
-# 
-# ggplot(iris, aes(1, Sepal.Length, fill = Species)) +
-#   geom_rain(rain.side = "r",
-#             point.args.pos = rlang::list2(position = ggpp::position_jitternudge(width = 0.05, nudge.from = "jittered", seed = 42, x = -0.1)),
-#             boxplot.args.pos = rlang::list2(width = 0.05, position = ggpp::position_dodgenudge(x = 0.1)),
-#             violin.args.pos = rlang::list2(side = "r", width = 0.7, position = position_nudge(x = .15)))
-# 
-# 
-# ggplot(iris, aes(Species, Sepal.Length, fill = Species)) +
-#   geom_rain()
 
 
 
