@@ -576,9 +576,9 @@ shinyApp(ui = ui, server = server, options = list(launch.browser = T))
 
 
 
-rsconnect::setAccountInfo(name='lcdlab',
-                          token='834F59DE44210A4178285D2584774090',
-                          secret='<SECRET>') # ask Rogier
-
+# rsconnect::setAccountInfo(name='lcdlab',
+#                           token='834F59DE44210A4178285D2584774090',
+#                           secret='<SECRET>') # ask Rogier
+# rsconnect::deployApp()
 
 
